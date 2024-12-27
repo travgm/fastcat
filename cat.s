@@ -22,6 +22,7 @@ error_msg:
 invalid_argv:
     .asciz "specify a single input file\n"
 
+.align 8
 in_buffer:
     .space READ_BUFFER + 1, 0x0
 
@@ -29,7 +30,6 @@ in_buffer:
     .section .text
 
 _start:
-
     mov  (%rsp), %rbx
     cmp  $2, %rbx
     jne  .L_invalid_argv
