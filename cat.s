@@ -52,7 +52,7 @@ _start:
     mov  $__NR_open, %rax
     syscall
     test  %rax, %rax
-    je   .L_open_error
+    js   .L_open_error
 
     mov  %rax, %r12
 
@@ -84,6 +84,12 @@ _start:
     lea  error_msg, %rdi
     call print_str
 .L_program_exit:
+    test %rdi, %rdi
+    js   .L_exit
+    mov %r12, %rdi
+    mov $__NR_close, %rax
+    syscall
+.L_exit:
     xor  %rdi, %rdi
     mov  $__NR_exit, %rax
     syscall
