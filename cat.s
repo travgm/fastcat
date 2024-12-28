@@ -45,13 +45,13 @@ _start:
 
     mov  %rax, %r12
 read_loop:
-    mov  %r12, %rdi         
-    lea  in_buffer, %rsi   
+    mov  %r12, %rdi
+    lea  in_buffer, %rsi
     mov  $READ_BUFFER, %rdx
     mov  $__NR_read, %rax
     syscall
 
-    cmp  $0, %rax
+    test  %rax, %rax
     jle  .L_program_exit
 
     mov  %rax, %rcx
