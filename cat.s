@@ -18,7 +18,7 @@
 .set __NR_exit,   60
 
 # Arbitary amount set for reading in the line
-.set READ_BUFFER, 2048
+.set READ_BUFFER, 2047
     
 # ------------ Initialized data ------------
     .section .data
@@ -28,7 +28,7 @@ error_msg:
 invalid_argv:
     .asciz "specify a single input file\n"
 
-.align 8
+.align 64
 in_buffer:
     # Line amount + 1 for null terminator
     .space READ_BUFFER + 1, 0x0
@@ -55,12 +55,14 @@ _start:
     js   .L_open_error
 
     mov  %rax, %r12
+    lea in_buffer, %r13
 
     # Loop each line of the file and print it to STDOUT
     # %r12 holds handle to the file
+    # %r13 holds the address of the buffer
 1:
     mov  %r12, %rdi
-    lea  in_buffer, %rsi
+    mov  %r13, %rsi
     mov  $READ_BUFFER, %rdx
     mov  $__NR_read, %rax
     syscall
@@ -71,8 +73,8 @@ _start:
 
     # NULL terminate buffer and print to STDOUT
     mov  %rax, %rcx
-    movb $0, in_buffer(%rcx)
-    lea  in_buffer, %rdi
+    movb $0, (%r13, %rcx)
+    mov  %r13, %rdi
     call print_str
 
     jmp  1b
