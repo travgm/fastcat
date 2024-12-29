@@ -26,14 +26,16 @@
 .endm
 
 # ------------ Initialized data ------------
-    .section .data
+    .section .rodata
 
 error_msg:
     .asciz "error: invalid input file\n"
 invalid_argv:
     .asciz "specify a single input file or none for stdin\n"
 
-.p2align 6, 0x0
+# ------------ Uninitialized data ------------
+    .section .bss
+    .p2align 6, 0x0
 in_buffer:
     # Line amount + 1 for null terminator
     .space READ_BUFFER + 1, 0x0
