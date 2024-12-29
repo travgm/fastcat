@@ -25,7 +25,7 @@
     syscall
 .endm
 
-# ------------ Initialized data ------------
+# ------------ Read only data ------------
     .section .rodata
 
 error_msg:
