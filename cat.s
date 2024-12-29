@@ -86,7 +86,7 @@ _start:
     # NULL terminate buffer and print to STDOUT
     mov   %rax, %rcx
     movb  $0, (%r13, %rcx)
-    mov   %r13, %rdi
+    mov   %r13, %rsi
     call  print_str
 
     jmp   1b
@@ -108,31 +108,15 @@ _start:
 
 # ---------- Utility Functions ----------
 print_str:
-    # Print a string to STDOUT = 1
-    # %rdi holds the address of the string
-    #
-    # We need to find the length of the string first and then print using
-    # syscall __NR_write (sys_write) 
-    push %rcx
-    push %rax
-    push %rdx
+    # rcx = length of string
+    # rdi = address of string
+    push  %rax
+    push  %rdx
 
-    xor  %rcx, %rcx
-.L_strlen:
-    movb (%rdi, %rcx), %al
-    test %al, %al
-    jz   .L_write
-    inc  %rcx
-    jmp  .L_strlen
-.L_write:
-    # At this point %rcx holds the length of the null terminated string
-    mov  %rcx, %rdx
-    mov  %rdi, %rsi
-    mov  $STDOUT, %rdi
-    mov  $__NR_write, %rax
-    syscall
+    mov   %rcx, %rdx
+    mov   $STDOUT, %rdi
+    scall __NR_write
 
     pop  %rdx
     pop  %rax
-    pop  %rcx
     ret
