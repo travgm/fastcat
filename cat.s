@@ -28,7 +28,7 @@ error_msg:
 invalid_argv:
     .asciz "specify a single input file or none for stdin\n"
 
-.align 64
+.p2align 6, 0x0
 in_buffer:
     # Line amount + 1 for null terminator
     .space READ_BUFFER + 1, 0x0
@@ -55,7 +55,6 @@ _start:
 
 .L_read_file:
     # Attempt to open argv[1], If we are unsuccessful we display an error and quit
-    xor  %rdi, %rdi
     mov  16(%rsp), %rdi
     mov  $O_RDONLY, %rsi
     xor  %rdx, %rdx
