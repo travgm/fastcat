@@ -6,7 +6,7 @@ all: cat
 
 cat: cat.o
 	$(LD) -o $@ $<
-
+	strip $@
 %.o: %.s
 	$(AS) $(FLAGS) $< -o $@
 

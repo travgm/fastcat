@@ -27,7 +27,7 @@
 
 # ------------ Read only data ------------
     .section .rodata
-
+    .p2align 4
 error_msg:
     .asciz "error: invalid input file\n"
 invalid_argv:
