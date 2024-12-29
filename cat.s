@@ -91,11 +91,13 @@ _start:
 
     jmp   1b
 .L_invalid_argv:
-    lea   invalid_argv, %rdi
+    lea   invalid_argv, %rsi
+    mov   $46, %rcx
     call  print_str
     jmp   .L_program_exit
 .L_open_error:
-    lea   error_msg, %rdi
+    lea   error_msg, %rsi
+    mov   $26, %rcx
     call  print_str
 .L_program_exit:
     test  %rdi, %rdi
