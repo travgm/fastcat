@@ -20,6 +20,11 @@
 # Arbitary amount set for reading in the line
 .set READ_BUFFER, 2047
 
+.macro scall nr
+    mov $\nr, %rax
+    syscall
+.endm
+
 # ------------ Initialized data ------------
     .section .data
 
@@ -40,68 +45,64 @@ in_buffer:
 _start:
     # Load address of our buffer into %r13 that will be used later for reading lines from
     # either standard input or a file
-    lea in_buffer, %r13
+    lea   in_buffer, %r13
 
     # %rsp on entry holds argc. Check that we have at least a single argument
     # which needs to be a file name
-    mov  (%rsp), %rbx
-    cmp  $2, %rbx                      # We compare to 2 because, argv[0] = program name, argv[1] = first argument
-    je   .L_read_file
-    jg   .L_invalid_argv
+    mov   (%rsp), %rbx
+    cmp   $2, %rbx                      # We compare to 2 because, argv[0] = program name, argv[1] = first argument
+    je    .L_read_file
+    jg    .L_invalid_argv
 
     # We default the file descriptor to standard input if no arguments are given
-    xor  %r12, %r12
-    jmp  1f
+    xor   %r12, %r12
+    jmp   1f
 
 .L_read_file:
     # Attempt to open argv[1], If we are unsuccessful we display an error and quit
-    mov  16(%rsp), %rdi
-    mov  $O_RDONLY, %rsi
-    xor  %rdx, %rdx
-    mov  $__NR_open, %rax
-    syscall
-    test %rax, %rax
-    js   .L_open_error
+    mov   16(%rsp), %rdi
+    mov   $O_RDONLY, %rsi
+    xor   %rdx, %rdx
+    scall  __NR_open
+    test  %rax, %rax
+    js    .L_open_error
     
-    mov %rax, %r12
+    mov   %rax, %r12
     # Loop each line of the file and print it to STDOUT
     # %r12 holds handle to the file
     # %r13 holds the address of the buffer
 1:
-    mov  %r12, %rdi
-    mov  %r13, %rsi
-    mov  $READ_BUFFER, %rdx
-    mov  $__NR_read, %rax
-    syscall
+    mov   %r12, %rdi
+    mov   %r13, %rsi
+    mov   $READ_BUFFER, %rdx
+    scall __NR_read
 
     # %rax contains the number of bytes read, 0 indicates EOF
-    test %rax, %rax
-    jle  .L_program_exit
+    test  %rax, %rax
+    jle   .L_program_exit
 
     # NULL terminate buffer and print to STDOUT
-    mov  %rax, %rcx
-    movb $0, (%r13, %rcx)
-    mov  %r13, %rdi
-    call print_str
+    mov   %rax, %rcx
+    movb  $0, (%r13, %rcx)
+    mov   %r13, %rdi
+    call  print_str
 
-    jmp  1b
+    jmp   1b
 .L_invalid_argv:
-    lea  invalid_argv, %rdi
-    call print_str
-    jmp  .L_program_exit
+    lea   invalid_argv, %rdi
+    call  print_str
+    jmp   .L_program_exit
 .L_open_error:
-    lea  error_msg, %rdi
-    call print_str
+    lea   error_msg, %rdi
+    call  print_str
 .L_program_exit:
-    test %rdi, %rdi
-    js   .L_exit
-    mov  %r12, %rdi
-    mov  $__NR_close, %rax
-    syscall
+    test  %rdi, %rdi
+    js    .L_exit
+    mov   %r12, %rdi
+    scall __NR_close
 .L_exit:
-    xor  %rdi, %rdi
-    mov  $__NR_exit, %rax
-    syscall
+    xor   %rdi, %rdi
+    scall __NR_exit
 
 # ---------- Utility Functions ----------
 print_str:
