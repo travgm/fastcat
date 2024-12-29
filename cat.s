@@ -8,6 +8,7 @@
 .version          "1"
 
 # ------------ Constants ------------
+.set STDIN,       0
 .set STDOUT,      1
 .set O_RDONLY,    0
 
@@ -19,14 +20,14 @@
 
 # Arbitary amount set for reading in the line
 .set READ_BUFFER, 2047
-    
+
 # ------------ Initialized data ------------
     .section .data
 
 error_msg:
-    .asciz "no input file specified\n"
+    .asciz "error: invalid input file\n"
 invalid_argv:
-    .asciz "specify a single input file\n"
+    .asciz "specify a single input file or none for stdin\n"
 
 .align 64
 in_buffer:
@@ -42,8 +43,13 @@ _start:
     # which needs to be a file name
     mov  (%rsp), %rbx
     cmp  $2, %rbx                      # We compare to 2 because, argv[0] = program name, argv[1] = first argument
-    jne  .L_invalid_argv
+    je   .L_read_file
+    jg   .L_invalid_argv
 
+    mov  $STDIN, %rax
+    jmp  .L_init_read
+
+.L_read_file:
     # attempt to open argv[1]
     xor  %rdi, %rdi
     mov  16(%rsp), %rdi
@@ -51,11 +57,12 @@ _start:
     xor  %rdx, %rdx
     mov  $__NR_open, %rax
     syscall
-    test  %rax, %rax
+    test %rax, %rax
     js   .L_open_error
 
+.L_init_read:
     mov  %rax, %r12
-    lea in_buffer, %r13
+    lea  in_buffer, %r13
 
     # Loop each line of the file and print it to STDOUT
     # %r12 holds handle to the file
@@ -68,7 +75,7 @@ _start:
     syscall
 
     # %rax contains the number of bytes read, 0 indicates EOF
-    test  %rax, %rax
+    test %rax, %rax
     jle  .L_program_exit
 
     # NULL terminate buffer and print to STDOUT
@@ -88,8 +95,8 @@ _start:
 .L_program_exit:
     test %rdi, %rdi
     js   .L_exit
-    mov %r12, %rdi
-    mov $__NR_close, %rax
+    mov  %r12, %rdi
+    mov  $__NR_close, %rax
     syscall
 .L_exit:
     xor  %rdi, %rdi
@@ -103,26 +110,26 @@ print_str:
     #
     # We need to find the length of the string first and then print using
     # syscall __NR_write (sys_write) 
-    push   %rcx
-    push   %rax
-    push   %rdx
+    push %rcx
+    push %rax
+    push %rdx
 
-    xor    %rcx, %rcx
+    xor  %rcx, %rcx
 .L_strlen:
-    movb   (%rdi, %rcx), %al
-    test   %al, %al
-    jz     .L_write
-    inc    %rcx
-    jmp    .L_strlen
+    movb (%rdi, %rcx), %al
+    test %al, %al
+    jz   .L_write
+    inc  %rcx
+    jmp  .L_strlen
 .L_write:
     # At this point %rcx holds the length of the null terminated string
-    mov    %rcx, %rdx
-    mov    %rdi, %rsi
-    mov    $STDOUT, %rdi
-    mov    $__NR_write, %rax
+    mov  %rcx, %rdx
+    mov  %rdi, %rsi
+    mov  $STDOUT, %rdi
+    mov  $__NR_write, %rax
     syscall
 
-    pop    %rdx
-    pop    %rax
-    pop    %rcx
+    pop  %rdx
+    pop  %rax
+    pop  %rcx
     ret
