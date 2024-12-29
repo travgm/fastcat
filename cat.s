@@ -8,7 +8,6 @@
 .version          "1"
 
 # ------------ Constants ------------
-.set STDIN,       0
 .set STDOUT,      1
 .set O_RDONLY,    0
 
@@ -39,6 +38,10 @@ in_buffer:
     .section .text
 
 _start:
+    # Load address of our buffer into %r13 that will be used later for reading lines from
+    # either standard input or a file
+    lea in_buffer, %r13
+
     # %rsp on entry holds argc. Check that we have at least a single argument
     # which needs to be a file name
     mov  (%rsp), %rbx
@@ -46,11 +49,12 @@ _start:
     je   .L_read_file
     jg   .L_invalid_argv
 
-    mov  $STDIN, %rax
-    jmp  .L_init_read
+    # We default the file descriptor to standard input if no arguments are given
+    xor  %r12, %r12
+    jmp  1f
 
 .L_read_file:
-    # attempt to open argv[1]
+    # Attempt to open argv[1], If we are unsuccessful we display an error and quit
     xor  %rdi, %rdi
     mov  16(%rsp), %rdi
     mov  $O_RDONLY, %rsi
@@ -59,11 +63,8 @@ _start:
     syscall
     test %rax, %rax
     js   .L_open_error
-
-.L_init_read:
-    mov  %rax, %r12
-    lea  in_buffer, %r13
-
+    
+    mov %rax, %r12
     # Loop each line of the file and print it to STDOUT
     # %r12 holds handle to the file
     # %r13 holds the address of the buffer
