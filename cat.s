@@ -18,7 +18,7 @@
 .set __NR_exit,   60
 
 # Arbitary amount set for reading in the line
-.set READ_BUFFER, 2047
+.set READ_BUFFER, 2 * 1024 * 1024
 
 .macro scall nr
     mov $\nr, %rax
@@ -35,10 +35,10 @@ invalid_argv:
 
 # ------------ Uninitialized data ------------
     .section .bss
-    .p2align 6, 0x0
+    .p2align 21, 0x0
 in_buffer:
     # Line amount + 1 for null terminator
-    .space READ_BUFFER + 1, 0x0
+    .space (2 * 1024 * 1024), 0x0 
 
 # ------------ Text ------------
     .globl _start
@@ -74,6 +74,7 @@ _start:
     # %r12 holds handle to the file
     # %r13 holds the address of the buffer
 1:
+    prefetchnta (%r13) 
     mov   %r12, %rdi
     mov   %r13, %rsi
     mov   $READ_BUFFER, %rdx
