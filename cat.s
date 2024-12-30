@@ -35,7 +35,7 @@ invalid_argv:
 
 # ------------ Uninitialized data ------------
     .section .bss
-    .p2align 21, 0x0
+    .p2align 6, 0x0
 in_buffer:
     # Line amount + 1 for null terminator
     .space (2 * 1024 * 1024), 0x0 
