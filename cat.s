@@ -16,9 +16,10 @@
 .set __NR_open,   2
 .set __NR_close,  3
 .set __NR_exit,   60
+.set __NR_readahead, 187 
 
 # Arbitary amount set for reading in the line
-.set READ_BUFFER, 2 * 1024 * 1024
+.set READ_BUFFER, 8 * 1024 * 1024
 
 .macro scall nr
     mov $\nr, %rax
@@ -38,7 +39,7 @@ invalid_argv:
     .p2align 6, 0x0
 in_buffer:
     # Line amount + 1 for null terminator
-    .space (2 * 1024 * 1024), 0x0 
+    .space (8 * 1024 * 1024), 0x0 
 
 # ------------ Text ------------
     .globl _start
@@ -61,6 +62,7 @@ _start:
     jmp   1f
 
 .L_read_file:
+.p2align 4
     # Attempt to open argv[1], If we are unsuccessful we display an error and quit
     mov   16(%rsp), %rdi
     mov   $O_RDONLY, %rsi
@@ -70,11 +72,20 @@ _start:
     js    .L_open_error
     
     mov   %rax, %r12
+
+    # Attempt to start loading pages from file to page cache
+    mov   %r12, %rdi
+    xor   %rsi, %rsi
+    xor   %rdx, %rdx
+    mov   $READ_BUFFER, %r10 
+    scall __NR_readahead
+
     # Loop each line of the file and print it to STDOUT
     # %r12 holds handle to the file
     # %r13 holds the address of the buffer
 1:
     prefetchnta (%r13) 
+    prefetchnta 64(%r13)
     mov   %r12, %rdi
     mov   %r13, %rsi
     mov   $READ_BUFFER, %rdx
