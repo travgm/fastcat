@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # cat.s - A minimal fast cat
 #
-# Author: Travis Montoya (trav@hexproof.sh)
+# Author: Travis Montoya (travis@travgm.org)
 # The do whatever you like with this file license
 #------------------------------------------------------------------------------
 .title            "cat.s"
